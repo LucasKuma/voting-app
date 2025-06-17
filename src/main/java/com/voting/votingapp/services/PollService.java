@@ -1,10 +1,13 @@
 package com.voting.votingapp.services;
 
+import com.voting.votingapp.model.OptionVote;
 import com.voting.votingapp.model.Poll;
 import com.voting.votingapp.repositories.PollRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,5 +30,30 @@ public class PollService {
 
     public Optional<Poll> getPollById(Long id) {
         return pollRepository.findById(id);
+    }
+
+    public void vote(Long pollId, int optionIndex) {
+        // Get Poll from DB
+        Poll poll = pollRepository.findById(pollId)
+                .orElseThrow(
+                        () -> new RuntimeException("Poll not found")
+                );
+
+        // Get All Options
+        List<OptionVote> options = poll.getOptions();
+
+        // If index for vote is not valid, throw error
+        if(optionIndex < 0 || optionIndex >= options.size()) {
+            throw new IllegalArgumentException("Invalid option index");
+        }
+
+        // Get Selected Option
+        OptionVote selectedOption = options.get(optionIndex);
+
+        // Increment vote for Selected Option
+        selectedOption.setVoteCount(selectedOption.getVoteCount() + 1);
+
+        // Save incremented option into the DB
+        pollRepository.save(poll);
     }
 }
